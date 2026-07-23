@@ -21,6 +21,7 @@
       --compliance: #D0E0F6;
       --examprep: #E2D8FA;
       --misc: #FAD2C3;
+      --legacy: #D6E3C1;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -54,6 +55,11 @@
     .plaque::after { right: 18px; }
     .logo-img { max-width: 190px; width: 100%; height: auto; margin-bottom: 8px; }
     .plaque .tagline { color: var(--brass-light); font-family: 'Playfair Display', serif; font-style: italic; font-size: 1rem; letter-spacing: 0.02em; }
+    .plaque .subtagline { color: rgba(255,255,255,0.75); font-size: .82rem; margin-top: 6px; line-height: 1.5; }
+    .rainbow-divider {
+      height: 6px;
+      background: linear-gradient(90deg, var(--language), var(--onboarding), var(--compliance), var(--examprep), var(--misc), var(--legacy));
+    }
 
     .wrap { width: min(720px, 94vw); margin: -18px auto 24px; padding: 0; }
 
@@ -270,9 +276,12 @@
 <body>
   <div class="plaque">
     <img src="Loops_logo.png" class="logo-img" alt="Loops">
-    <div class="tagline">Fail here. Shine in public.</div>
-    <div style="color:rgba(255,255,255,0.6);font-size:0.8rem;margin-top:4px;letter-spacing:0.04em;text-transform:uppercase;">Build a game</div>
+    <div class="tagline">Practice here. Shine in public.</div>
+    <div class="subtagline">Turn anything into a memorisation game. Five loops. Ten questions. It sticks.</div>
+    <div style="color:rgba(255,255,255,0.6);font-size:0.8rem;margin-top:10px;letter-spacing:0.04em;text-transform:uppercase;">Build a game</div>
   </div>
+
+  <div class="rainbow-divider"></div>
 
   <div class="intro-overlay" id="introOverlay">
     <div class="intro-modal">
