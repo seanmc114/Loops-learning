@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loops — The Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0D2A52;
+    --paper:#FBF9F4;
+    --teal:#8FE3D8;
+    --amber:#F8CE7C;
+    --coral:#F5AD92;
+    --ink-soft:#5B6472;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    font-family:'Inter',sans-serif;
+    color:var(--navy);
+  }
+  .head{
+    text-align:center;
+    padding:26px 20px 16px;
+  }
+  .head h1{
+    font-family:'Playfair Display',serif;
+    font-size:26px;
+    margin:0 0 3px;
+  }
+  .head p{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin:0;
+  }
+  .divider{ height:6px; background:linear-gradient(90deg,var(--teal),var(--amber),#A9C6EE,#CBB9F5,var(--coral)); }
+
+  .wrap{
+    max-width:520px;
+    margin:0 auto;
+    padding:18px 16px 60px;
+  }
+
+  .login{
+    background:#fff;
+    border-radius:16px;
+    padding:18px;
+    box-shadow:0 5px 16px rgba(13,42,82,.09);
+    margin-bottom:16px;
+  }
+  .login label{
+    display:block;
+    font-size:12px;
+    font-weight:800;
+    margin-bottom:8px;
+  }
+  .login input{
+    width:100%;
+    padding:12px 14px;
+    border-radius:11px;
+    border:2px solid #E4E0D4;
+    font-size:14px;
+    margin-bottom:10px;
+  }
+  .btn{
+    display:block;
+    width:100%;
+    background:var(--navy);
+    color:#fff;
+    font-size:14px;
+    font-weight:800;
+    padding:13px 0;
+    border:none;
+    border-radius:100px;
+    cursor:pointer;
+  }
+
+  .summary{
+    text-align:center;
+    font-size:13px;
+    font-weight:700;
+    color:var(--ink-soft);
+    margin-bottom:14px;
+  }
+  .summary b{ color:var(--navy); font-size:16px; }
+
+  .report{
+    background:#fff;
+    border-radius:16px;
+    padding:16px;
+    box-shadow:0 5px 16px rgba(13,42,82,.09);
+    margin-bottom:14px;
+    border-left:6px solid #E4E0D4; /* fallback when category unknown */
+  }
+  .report.cat-language{ border-left-color:#8FE3D8; }
+  .report.cat-onboarding{ border-left-color:#F8CE7C; }
+  .report.cat-compliance{ border-left-color:#A9C6EE; }
+  .report.cat-examprep{ border-left-color:#CBB9F5; }
+  .report.cat-misc{ border-left-color:#F5AD92; }
+
+  .r-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+  }
+  .r-game{
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.07em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .r-count{
+    background:var(--navy);
+    color:#fff;
+    font-size:11px;
+    font-weight:800;
+    padding:4px 10px;
+    border-radius:100px;
+  }
+  .r-q{
+    font-size:15px;
+    font-weight:800;
+    margin:0 0 8px;
+    line-height:1.35;
+  }
+  .r-line{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin:3px 0;
+    line-height:1.45;
+  }
+  .r-line b{ color:var(--navy); }
+  .r-ai{
+    background:var(--paper);
+    border-radius:11px;
+    padding:10px 12px;
+    font-size:12.5px;
+    line-height:1.45;
+    margin:10px 0;
+  }
+  .r-ai .v-tag{
+    font-weight:800;
+    text-transform:uppercase;
+    font-size:10.5px;
+    letter-spacing:.06em;
+  }
+  .fix-input{
+    width:100%;
+    padding:10px 12px;
+    border-radius:10px;
+    border:2px solid #E4E0D4;
+    font-size:13px;
+    margin:4px 0 10px;
+  }
+  .r-actions{ display:flex; gap:8px; }
+  .btn-approve{
+    flex:1;
+    background:var(--navy);
+    color:#fff;
+    border:none;
+    border-radius:100px;
+    padding:11px 0;
+    font-size:13px;
+    font-weight:800;
+    cursor:pointer;
+  }
+  .btn-dismiss{
+    flex:1;
+    background:none;
+    color:var(--navy);
+    border:2px solid rgba(13,42,82,.25);
+    border-radius:100px;
+    padding:11px 0;
+    font-size:13px;
+    font-weight:800;
+    cursor:pointer;
+  }
+  .empty{
+    text-align:center;
+    padding:40px 20px;
+    color:var(--ink-soft);
+    font-size:14px;
+    line-height:1.6;
+  }
+  .empty .big{ font-size:40px; margin-bottom:8px; }
+  .hidden{ display:none; }
+  .status{
+    text-align:center;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:6px;
+    min-height:16px;
+  }
+  footer{
+    text-align:center;
+    padding:0 20px 36px;
+    font-size:11px;
+    color:var(--ink-soft);
+    line-height:1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>The Desk</h1>
+  <p>Reports that need your eye. One tap fixes, one tap dismisses.</p>
+</div>
+<div class="divider"></div>
+
+<div class="wrap">
+
+  <div class="login" id="loginBox">
+    <label for="secretInput">Admin secret</label>
+    <input id="secretInput" type="password" placeholder="Paste it once - remembered on this phone">
+    <button class="btn" id="loadBtn">Open the desk</button>
+    <div class="status" id="loginStatus"></div>
+  </div>
+
+  <div id="deskArea" class="hidden">
+    <div class="summary" id="summaryLine"></div>
+    <div id="reportList"></div>
+  </div>
+
+</div>
+
+<footer>
+  &copy; 2026 Loops Learning Tools &middot; Dublin<br>
+  <i>Imagination and perseverance.</i>
+</footer>
+
+<script>
+var WORKER_URL = "https://dry-credit-f396.seansynge.workers.dev";
+var SECRET_KEY = "loops_admin_secret";
+
+var loginBox = document.getElementById("loginBox");
+var deskArea = document.getElementById("deskArea");
+var reportList = document.getElementById("reportList");
+var summaryLine = document.getElementById("summaryLine");
+var loginStatus = document.getElementById("loginStatus");
+var secretInput = document.getElementById("secretInput");
+
+document.getElementById("loadBtn").addEventListener("click", function () {
+  var s = secretInput.value.trim();
+  if (!s) { loginStatus.textContent = "Paste the secret first."; return; }
+  localStorage.setItem(SECRET_KEY, s);
+  loadReports();
+});
+
+var saved = localStorage.getItem(SECRET_KEY);
+if (saved) {
+  secretInput.value = saved;
+  loadReports();
+}
+
+function loadReports() {
+  var secret = localStorage.getItem(SECRET_KEY) || secretInput.value.trim();
+  loginStatus.textContent = "Loading...";
+
+  fetch(WORKER_URL + "/reports", {
+    headers: { "x-admin-secret": secret }
+  })
+  .then(function (r) {
+    if (r.status === 401) throw new Error("Wrong secret.");
+    if (!r.ok) throw new Error("Could not load (" + r.status + ").");
+    return r.json();
+  })
+  .then(function (data) {
+    loginBox.classList.add("hidden");
+    deskArea.classList.remove("hidden");
+    render(data.reports || []);
+  })
+  .catch(function (err) {
+    loginStatus.textContent = err.message;
+  });
+}
+
+function render(reports) {
+  reportList.innerHTML = "";
+
+  if (reports.length === 0) {
+    summaryLine.innerHTML = "";
+    var empty = document.createElement("div");
+    empty.className = "empty";
+    empty.innerHTML = "<div class='big'>&#9749;</div>Nothing needs you.<br>Go have your evening.";
+    reportList.appendChild(empty);
+    return;
+  }
+
+  summaryLine.innerHTML = "<b>" + reports.length + "</b> report" + (reports.length === 1 ? "" : "s") + " waiting";
+
+  reports.forEach(function (rep) {
+    var card = document.createElement("div");
+    var catSlug = (rep.category || "").toLowerCase().replace(" ", "");
+    card.className = "report cat-" + catSlug;
+
+    var verdictLabel = "AI unsure - your call";
+    if (rep.aiVerdict === "answer_wrong") verdictLabel = "AI agrees: answer looks wrong";
+    if (rep.aiVerdict === "answer_ok") verdictLabel = "AI says the answer is fine";
+
+    var suggested = rep.aiSuggestedAnswer || "";
+
+    var top = document.createElement("div");
+    top.className = "r-top";
+    top.innerHTML = "<span class='r-game'>" + esc(rep.gameId) + "</span>" +
+                    "<span class='r-count'>&times;" + (rep.count || 1) + "</span>";
+    card.appendChild(top);
+
+    var q = document.createElement("p");
+    q.className = "r-q";
+    q.textContent = rep.questionText;
+    card.appendChild(q);
+
+    var cur = document.createElement("div");
+    cur.className = "r-line";
+    cur.innerHTML = "Current answer: <b>" + esc(rep.currentAnswer || "-") + "</b>";
+    card.appendChild(cur);
+
+    if (rep.userAnswer) {
+      var ua = document.createElement("div");
+      ua.className = "r-line";
+      ua.innerHTML = "Player answered: <b>" + esc(rep.userAnswer) + "</b>";
+      card.appendChild(ua);
+    }
+
+    var ai = document.createElement("div");
+    ai.className = "r-ai";
+    ai.innerHTML = "<span class='v-tag'>" + verdictLabel + "</span><br>" + esc(rep.aiExplanation || "");
+    card.appendChild(ai);
+
+    var fix = document.createElement("input");
+    fix.className = "fix-input";
+    fix.value = suggested;
+    fix.placeholder = "New answer (edit or type your own)";
+    card.appendChild(fix);
+
+    var actions = document.createElement("div");
+    actions.className = "r-actions";
+
+    var approve = document.createElement("button");
+    approve.className = "btn-approve";
+    approve.textContent = "Fix it";
+    approve.addEventListener("click", function () {
+      act("/reports/approve", { key: rep.key, newAnswer: fix.value.trim() }, card, approve);
+    });
+
+    var dismiss = document.createElement("button");
+    dismiss.className = "btn-dismiss";
+    dismiss.textContent = "Answer's fine";
+    dismiss.addEventListener("click", function () {
+      act("/reports/dismiss", { key: rep.key }, card, dismiss);
+    });
+
+    actions.appendChild(approve);
+    actions.appendChild(dismiss);
+    card.appendChild(actions);
+
+    reportList.appendChild(card);
+  });
+}
+
+function act(path, body, card, btn) {
+  var secret = localStorage.getItem(SECRET_KEY);
+  btn.disabled = true;
+  btn.textContent = "Working...";
+
+  fetch(WORKER_URL + path, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-admin-secret": secret },
+    body: JSON.stringify(body)
+  })
+  .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+  .then(function (res) {
+    if (!res.ok) throw new Error(res.j.error || "failed");
+    card.style.opacity = "0.35";
+    card.querySelectorAll("button, input").forEach(function (el) { el.disabled = true; });
+    btn.textContent = "Done";
+    var left = document.querySelectorAll(".report:not([style])").length;
+  })
+  .catch(function (err) {
+    btn.disabled = false;
+    btn.textContent = "Try again - " + err.message;
+  });
+}
+
+function esc(s) {
+  var d = document.createElement("div");
+  d.textContent = s == null ? "" : String(s);
+  return d.innerHTML;
+}
+</script>
+
+</body>
+</html>
