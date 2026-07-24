@@ -16,12 +16,6 @@
       --card: #ffffff;
       --ink-soft: #5B6472;
       --line: #E4E0D4;
-      --language: #C1F0EA;
-      --onboarding: #FBE4B7;
-      --compliance: #D0E0F6;
-      --examprep: #E2D8FA;
-      --misc: #FAD2C3;
-      --legacy: #D6E3C1;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -58,7 +52,7 @@
     .plaque .subtagline { color: rgba(255,255,255,0.75); font-size: .82rem; margin-top: 6px; line-height: 1.5; }
     .rainbow-divider {
       height: 6px;
-      background: linear-gradient(90deg, var(--language), var(--onboarding), var(--compliance), var(--examprep), var(--misc), var(--legacy));
+      background: linear-gradient(90deg, #C1F0EA, #FBE4B7, #D0E0F6, #E2D8FA, #FAD2C3);
     }
 
     .wrap { width: min(720px, 94vw); margin: -18px auto 24px; padding: 0; }
@@ -233,6 +227,18 @@
     }
     .chip:hover { border-color: var(--navy); color: var(--navy); }
 
+    .tagchip {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: none; background: rgba(13,42,82,.08); border-radius: 100px;
+      padding: 7px 8px 7px 13px; font-size: 0.82rem; font-weight: 700; color: var(--navy);
+    }
+    .tagchip.subcat { background: rgba(13,42,82,.16); }
+    .tagchip .remove-x {
+      background: rgba(13,42,82,.15); border: none; border-radius: 50%; width: 18px; height: 18px;
+      color: var(--navy); font-size: .7rem; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;
+    }
+    .tagchip .remove-x:hover { background: rgba(13,42,82,.3); }
+
     button.primary-btn {
       padding: 13px 20px; border-radius: 10px; border: none; font-size: 1rem; cursor: pointer;
       color: white; background: linear-gradient(135deg, var(--navy), var(--navy-2));
@@ -281,7 +287,7 @@
     <div style="color:rgba(255,255,255,0.6);font-size:0.8rem;margin-top:10px;letter-spacing:0.04em;text-transform:uppercase;">Build a game</div>
   </div>
 
-  <div class="rainbow-divider"></div>
+  <div class="rainbow-divider" id="rainbowDivider"></div>
 
   <div class="intro-overlay" id="introOverlay">
     <div class="intro-modal">
@@ -329,11 +335,11 @@
         <h2 class="section-title">Who's this for?</h2>
         <div class="section-help">Pick a category — this decides where it lands in the library.</div>
         <div class="audience-grid" id="audienceGrid">
-          <div class="audience-tile selected" style="background:var(--language);" data-value="Language"><span class="emoji">🌍</span><span class="label">Language</span></div>
-          <div class="audience-tile" style="background:var(--onboarding);" data-value="Onboarding"><span class="emoji">🪪</span><span class="label">Onboarding</span></div>
-          <div class="audience-tile" style="background:var(--compliance);" data-value="Compliance"><span class="emoji">🛡️</span><span class="label">Compliance</span></div>
-          <div class="audience-tile" style="background:var(--examprep);" data-value="Exam Prep"><span class="emoji">📝</span><span class="label">Exam Prep</span></div>
-          <div class="audience-tile" style="background:var(--misc);" data-value="Misc"><span class="emoji">✨</span><span class="label">Misc</span></div>
+          <div class="audience-tile selected" style="background:#C1F0EA;" data-value="Language"><span class="emoji">🌍</span><span class="label">Language</span></div>
+          <div class="audience-tile" style="background:#FBE4B7;" data-value="Onboarding"><span class="emoji">🪪</span><span class="label">Onboarding</span></div>
+          <div class="audience-tile" style="background:#D0E0F6;" data-value="Compliance"><span class="emoji">🛡️</span><span class="label">Compliance</span></div>
+          <div class="audience-tile" style="background:#E2D8FA;" data-value="Exam Prep"><span class="emoji">📝</span><span class="label">Exam Prep</span></div>
+          <div class="audience-tile" style="background:#FAD2C3;" data-value="Other"><span class="emoji">✨</span><span class="label">Other</span></div>
         </div>
       </div>
 
@@ -374,6 +380,16 @@
         <button onclick="parseContent()" id="parseBtn" class="primary-btn">✦ Sort into loops</button>
       </div>
       <div id="loopsDisplay"></div>
+
+      <div class="card" id="tagsCard" style="display:none;">
+        <h2 class="section-title">Subcategory &amp; tags</h2>
+        <div class="section-help" id="tagsHelp">Suggested from your content — tap ✕ to remove one, or add your own. This is how the library organises itself as it grows.</div>
+        <div class="chip-row" id="tagsChipRow"></div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="newTagInput" placeholder="Add a tag and press Enter" style="flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:.88rem;">
+        </div>
+      </div>
+
       <button onclick="switchTab(2)" class="primary-btn" style="margin-top:16px;">Next: Preview →</button>
     </div>
 
@@ -404,6 +420,9 @@
     let allLoops = [];
     let backgroundBase64 = null;
     let selectedAudience = 'Language';
+    let currentSubcategory = null;
+    let currentTags = [];
+    let liveCategories = null; // filled from games.json once loaded — falls back to the classic five if it never loads
     const WORKER_URL = 'https://dry-credit-f396.seansynge.workers.dev';
     const LIBRARY_ORIGIN = 'https://seanmc114.github.io/Loops-Library';
     const DRAFT_KEY = 'loops_draft';
@@ -416,6 +435,8 @@
           selectedAudience: selectedAudience,
           contentInput: document.getElementById('contentInput').value,
           allLoops: allLoops,
+          currentSubcategory: currentSubcategory,
+          currentTags: currentTags,
           savedAt: Date.now()
         };
         // Nothing worth saving yet - don't clutter storage with an empty draft
@@ -459,7 +480,9 @@
         selectedAudience = draft.selectedAudience || 'Language';
         document.querySelectorAll('.audience-tile').forEach(t => t.classList.toggle('selected', t.dataset.value === selectedAudience));
         allLoops = draft.allLoops || [];
-        if (allLoops.length) displayLoops();
+        currentSubcategory = draft.currentSubcategory || null;
+        currentTags = draft.currentTags || [];
+        if (allLoops.length) { displayLoops(); renderTagsChips(); }
         switchTab(allLoops.length ? 1 : 0);
         banner.remove();
       });
@@ -519,14 +542,47 @@
       document.getElementById('publishBtn').disabled = !this.checked;
     });
 
-    document.querySelectorAll('.audience-tile').forEach(tile => {
-      tile.addEventListener('click', function () {
-        document.querySelectorAll('.audience-tile').forEach(t => t.classList.remove('selected'));
-        this.classList.add('selected');
-        selectedAudience = this.dataset.value;
-        saveDraft();
+    function wireAudienceTiles() {
+      document.querySelectorAll('.audience-tile').forEach(tile => {
+        tile.addEventListener('click', function () {
+          document.querySelectorAll('.audience-tile').forEach(t => t.classList.remove('selected'));
+          this.classList.add('selected');
+          selectedAudience = this.dataset.value;
+          saveDraft();
+        });
       });
-    });
+    }
+    wireAudienceTiles();
+
+    // Category chip list becomes dynamic — read from games.json's live
+    // categories map instead of a hardcoded five, so a newly-promoted
+    // category (or a renamed one) just shows up here automatically.
+    function renderAudienceGrid() {
+      if (!liveCategories) return;
+      const grid = document.getElementById('audienceGrid');
+      const names = Object.keys(liveCategories);
+      if (names.length === 0) return;
+      const keepSelected = names.includes(selectedAudience) ? selectedAudience : names[0];
+      selectedAudience = keepSelected;
+      grid.innerHTML = names.map(name => {
+        const c = liveCategories[name];
+        const sel = name === keepSelected ? ' selected' : '';
+        return `<div class="audience-tile${sel}" style="background:${c.pastel};" data-value="${name.replace(/"/g,'&quot;')}"><span class="emoji">${c.emoji || '🎮'}</span><span class="label">${name}</span></div>`;
+      }).join('');
+      wireAudienceTiles();
+      const divider = document.getElementById('rainbowDivider');
+      if (divider) divider.style.background = 'linear-gradient(90deg, ' + names.map(n => liveCategories[n].pastel).join(', ') + ')';
+    }
+
+    fetch(LIBRARY_ORIGIN + '/games.json')
+      .then(r => r.json())
+      .then(data => {
+        if (data && data.categories && Object.keys(data.categories).length) {
+          liveCategories = data.categories;
+          renderAudienceGrid();
+        }
+      })
+      .catch(() => { /* dynamic list unavailable — the static classic-five markup stays as a safe fallback */ });
 
     function fillExample(text) {
       document.getElementById('contentInput').value = text;
@@ -572,6 +628,7 @@
         document.getElementById('publishBtn').disabled = true;
         btn.textContent = '✓ Ready — 5 loops, 50 questions';
         setTimeout(() => { btn.textContent = '✦ Sort into loops'; btn.disabled = false; }, 1800);
+        fetchSuggestedTags(input);
       } catch (err) {
         alert('Error: ' + err.message);
         btn.textContent = '✦ Sort into loops';
@@ -580,6 +637,75 @@
         statusTimers.forEach(clearTimeout);
       }
     }
+
+    // Ask the worker for a suggested subcategory + tags once loops exist —
+    // pre-filled, editable chips ("human confirms in five seconds").
+    async function fetchSuggestedTags(inputText) {
+      const tagsHelp = document.getElementById('tagsHelp');
+      document.getElementById('tagsCard').style.display = 'block';
+      tagsHelp.textContent = 'Working out a subcategory and tags from your content...';
+      try {
+        const res = await fetch(WORKER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'suggestTags', content: inputText, category: selectedAudience, loops: allLoops })
+        });
+        const data = await res.json();
+        currentSubcategory = data.subcategory || null;
+        currentTags = Array.isArray(data.tags) ? data.tags : [];
+        tagsHelp.textContent = 'Suggested from your content — tap ✕ to remove one, or add your own. This is how the library organises itself as it grows.';
+      } catch (e) {
+        currentSubcategory = null;
+        currentTags = [];
+        tagsHelp.textContent = "Couldn't get a suggestion — add a subcategory/tags yourself, or leave blank.";
+      }
+      renderTagsChips();
+      saveDraft();
+    }
+
+    function renderTagsChips() {
+      const row = document.getElementById('tagsChipRow');
+      if (!row) return;
+      if (currentSubcategory || currentTags.length) {
+        document.getElementById('tagsCard').style.display = 'block';
+      }
+      let html = '';
+      if (currentSubcategory) {
+        html += `<span class="tagchip subcat">${escapeAttr(currentSubcategory)}<button type="button" class="remove-x" onclick="removeSubcategory()" title="Remove subcategory">✕</button></span>`;
+      }
+      currentTags.forEach((tag, i) => {
+        html += `<span class="tagchip">${escapeAttr(tag)}<button type="button" class="remove-x" onclick="removeTag(${i})" title="Remove tag">✕</button></span>`;
+      });
+      row.innerHTML = html;
+    }
+
+    function removeSubcategory() {
+      currentSubcategory = null;
+      renderTagsChips();
+      saveDraft();
+    }
+
+    function removeTag(index) {
+      currentTags.splice(index, 1);
+      renderTagsChips();
+      saveDraft();
+    }
+
+    function normalizeTagInput(raw) {
+      return String(raw || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+    }
+
+    document.getElementById('newTagInput').addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      const tag = normalizeTagInput(this.value);
+      if (tag && !currentTags.includes(tag) && tag !== normalizeTagInput(currentSubcategory)) {
+        currentTags.push(tag);
+        renderTagsChips();
+        saveDraft();
+      }
+      this.value = '';
+    });
 
     function displayLoops() {
       let html = '';
@@ -644,12 +770,14 @@
 
     function buildGameDataForPreview() {
       const name = document.getElementById('gameName').value.trim() || 'Untitled Game';
-      const emojiMap = { Language: '🌍', Onboarding: '🪪', Compliance: '🛡️', 'Exam Prep': '📝', Misc: '✨' };
+      const fallbackEmojiMap = { Language: '🌍', Onboarding: '🪪', Compliance: '🛡️', 'Exam Prep': '📝', Other: '✨' };
+      const catMeta = (liveCategories && liveCategories[selectedAudience]) || null;
       return {
         slug: 'preview-' + Date.now(),
         name,
-        emoji: emojiMap[selectedAudience] || '🎮',
+        emoji: (catMeta && catMeta.emoji) || fallbackEmojiMap[selectedAudience] || '🎮',
         category: selectedAudience,
+        colors: catMeta ? { pastel: catMeta.pastel, deep: catMeta.deep, wash: catMeta.wash } : undefined,
         background: backgroundBase64,
         // Absolute URL — this runs inside an iframe via srcdoc, so a relative
         // "../Loops_triskel_mark.png" would resolve against the wrong origin and
@@ -742,12 +870,18 @@
         const res = await fetch(WORKER_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'publish', gameName: name, audience: selectedAudience, loops: allLoops, backgroundBase64, creatorId, authorName: document.getElementById('authorName').value.trim() })
+          body: JSON.stringify({
+            action: 'publish', gameName: name, audience: selectedAudience, loops: allLoops, backgroundBase64, creatorId,
+            authorName: document.getElementById('authorName').value.trim(),
+            subcategory: currentSubcategory, tags: currentTags
+          })
         });
 
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Publish failed');
         clearDraft();
+        currentSubcategory = null;
+        currentTags = [];
 
         status.innerHTML = `<div class="status success">✓ Published!</div>
           <div id="liveCheckStatus" style="font-size:.82rem;color:var(--ink-soft);margin-top:8px;">⏳ Checking if it's live yet...</div>
