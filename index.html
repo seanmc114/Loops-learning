@@ -353,8 +353,9 @@
           <input type="text" id="authorName" placeholder="e.g., Seán">
         </div>
         <div class="form-group" style="margin-bottom: 0;">
-          <label>Background image (optional)</label>
-          <input type="file" id="bgImage" accept="image/*">
+          <label>Tile image (required) — at least 800×450px, JPEG or PNG</label>
+          <input type="file" id="bgImage" accept="image/png,image/jpeg">
+          <div id="bgImageStatus" style="font-size:.8rem;color:var(--ink-soft);margin-top:6px;"></div>
         </div>
       </div>
       <button onclick="switchTab(1)" class="primary-btn">Next: Add content →</button>
@@ -418,7 +419,9 @@
 
   <script>
     let allLoops = [];
-    let backgroundBase64 = null;
+    let thumbnailBase64 = null;
+    const MIN_TILE_WIDTH = 800;
+    const MIN_TILE_HEIGHT = 450;
     let selectedAudience = 'Language';
     let currentSubcategory = null;
     let currentTags = [];
@@ -538,9 +541,12 @@
       if (idx === 2) renderPreview();
     }
 
-    document.getElementById('reviewedCheck').addEventListener('change', function () {
-      document.getElementById('publishBtn').disabled = !this.checked;
-    });
+    function updatePublishButtonState() {
+      const reviewed = document.getElementById('reviewedCheck').checked;
+      document.getElementById('publishBtn').disabled = !(reviewed && thumbnailBase64);
+    }
+
+    document.getElementById('reviewedCheck').addEventListener('change', updatePublishButtonState);
 
     function wireAudienceTiles() {
       document.querySelectorAll('.audience-tile').forEach(tile => {
@@ -590,9 +596,37 @@
 
     document.getElementById('bgImage').addEventListener('change', function() {
       const file = this.files[0];
-      if (!file) return;
+      const status = document.getElementById('bgImageStatus');
+      const input = this;
+      thumbnailBase64 = null;
+      updatePublishButtonState();
+      if (!file) { status.textContent = ''; return; }
+
+      status.textContent = 'Checking image...';
       const reader = new FileReader();
-      reader.onload = (e) => { backgroundBase64 = e.target.result; };
+      reader.onload = (e) => {
+        const dataUrl = e.target.result;
+        const img = new Image();
+        img.onload = () => {
+          if (img.naturalWidth < MIN_TILE_WIDTH || img.naturalHeight < MIN_TILE_HEIGHT) {
+            status.textContent = `Too small (${img.naturalWidth}×${img.naturalHeight}) — needs to be at least ${MIN_TILE_WIDTH}×${MIN_TILE_HEIGHT}px. Choose a different image.`;
+            input.value = '';
+            thumbnailBase64 = null;
+          } else {
+            thumbnailBase64 = dataUrl;
+            status.textContent = `✓ ${img.naturalWidth}×${img.naturalHeight} — good to go. (Still checked for appropriateness when you publish.)`;
+          }
+          updatePublishButtonState();
+          saveDraft();
+        };
+        img.onerror = () => {
+          status.textContent = "Couldn't read that image — try a different file.";
+          input.value = '';
+          thumbnailBase64 = null;
+          updatePublishButtonState();
+        };
+        img.src = dataUrl;
+      };
       reader.readAsDataURL(file);
     });
 
@@ -778,7 +812,7 @@
         emoji: (catMeta && catMeta.emoji) || fallbackEmojiMap[selectedAudience] || '🎮',
         category: selectedAudience,
         colors: catMeta ? { pastel: catMeta.pastel, deep: catMeta.deep, wash: catMeta.wash } : undefined,
-        background: backgroundBase64,
+        background: thumbnailBase64,
         // Absolute URL — this runs inside an iframe via srcdoc, so a relative
         // "../Loops_triskel_mark.png" would resolve against the wrong origin and
         // show as a broken image. Point straight at the live library asset.
@@ -859,6 +893,7 @@
 
       if (!name) { alert('Enter a game name.'); return; }
       if (allLoops.length === 0) { alert('Create content first.'); return; }
+      if (!thumbnailBase64) { alert('Add a tile image (at least 800×450px) on the Basics tab first — every game needs one.'); return; }
 
       const btn = document.getElementById('publishBtn');
       const status = document.getElementById('publishStatus');
@@ -871,7 +906,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            action: 'publish', gameName: name, audience: selectedAudience, loops: allLoops, backgroundBase64, creatorId,
+            action: 'publish', gameName: name, audience: selectedAudience, loops: allLoops, thumbnailBase64, creatorId,
             authorName: document.getElementById('authorName').value.trim(),
             subcategory: currentSubcategory, tags: currentTags
           })
@@ -882,6 +917,9 @@
         clearDraft();
         currentSubcategory = null;
         currentTags = [];
+        thumbnailBase64 = null;
+        document.getElementById('bgImage').value = '';
+        document.getElementById('bgImageStatus').textContent = '';
 
         status.innerHTML = `<div class="status success">✓ Published!</div>
           <div id="liveCheckStatus" style="font-size:.82rem;color:var(--ink-soft);margin-top:8px;">⏳ Checking if it's live yet...</div>
